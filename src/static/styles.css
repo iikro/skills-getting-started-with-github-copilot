@@ -65,6 +65,14 @@ section h3 {
   background-color: #f9f9f9;
 }
 
+.activity-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
 .activity-card h4 {
   margin-bottom: 10px;
   color: #0066cc;
@@ -72,6 +80,84 @@ section h3 {
 
 .activity-card p {
   margin-bottom: 8px;
+}
+
+.activity-meta {
+  color: #444;
+}
+
+.availability-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e8f0fe;
+  color: #174ea6;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.participants-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e4e4e4;
+}
+
+.participants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.participants-header h5 {
+  font-size: 14px;
+  color: #1a237e;
+}
+
+.participants-header span {
+  font-size: 13px;
+  color: #666;
+}
+
+.participants-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.participants-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+}
+
+.participants-empty {
+  color: #777;
+  font-style: italic;
+}
+
+.participant-remove {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 20px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.participant-remove:hover {
+  background: #fecaca;
 }
 
 .form-group {
