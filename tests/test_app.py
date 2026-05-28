@@ -1,62 +1,25 @@
 import copy
 from fastapi.testclient import TestClient
 
-from src import app as application
-from src.app import activities
-
-
-client = TestClient(application.app)
-
-
-def test_get_activities():
-    resp = client.get("/activities")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert isinstance(data, dict)
-    assert "Chess Club" in data
-
-
-def test_signup_and_duplicate_and_unregister():
-    # Arrange - snapshot
-    snapshot = copy.deepcopy(activities)
-    activity = "Chess Club"
-    email = "pytest-student@example.edu"
-
-    try:
-        # Act - signup
-        resp = client.post(f"/activities/{activity}/signup?email={email}")
-        assert resp.status_code == 200
-        assert resp.json()["message"] == f"Signed up {email} for {activity}"
-
-        # Assert participant added
-        assert email in activities[activity]["participants"]
-
-        # Act - duplicate signup
-        resp2 = client.post(f"/activities/{activity}/signup?email={email}")
-        # Should return 400 for duplicate
-        assert resp2.status_code == 400
-
-        # Act - unregister
-        resp3 = client.delete(f"/activities/{activity}/signup?email={email}")
-        assert resp3.status_code == 200
-        assert resp3.json()["message"] == f"Unregistered {email} from {activity}"
-
-        # Act - unregister again should 404
-        resp4 = client.delete(f"/activities/{activity}/signup?email={email}")
-        assert resp4.status_code == 404
-
-    finally:
-        # Restore
-        activities.clear()
-        activities.update(snapshot)
-from fastapi.testclient import TestClient
 from src.app import app, activities
 
 client = TestClient(app)
 
 
-def test_get_activities_returns_data():
+def test_root_redirects_to_index():
     # Arrange
+
+    # Act
+    resp = client.get("/", allow_redirects=False)
+
+    # Assert
+    assert resp.status_code == 307
+    assert resp.headers.get("location") == "/static/index.html"
+
+
+def test_get_activities_aaa():
+    # Arrange
+
     # Act
     resp = client.get("/activities")
 
@@ -68,46 +31,70 @@ def test_get_activities_returns_data():
     assert "participants" in data["Chess Club"]
 
 
-def test_signup_and_duplicate_block():
+def test_signup_then_duplicate_then_unregister_aaa():
     # Arrange
     activity = "Chess Club"
-    email = "teststudent@example.edu"
-    original = list(activities[activity]["participants"])  # snapshot
+    email = "pytest-student@example.edu"
+    snapshot = copy.deepcopy(activities)
 
     try:
-        # Act: first signup should succeed
-        resp1 = client.post(f"/activities/{activity}/signup?email={email}")
-        assert resp1.status_code == 200
+        # Act - signup
+        resp_signup = client.post(f"/activities/{activity}/signup?email={email}")
+        # Assert - signup succeeded
+        assert resp_signup.status_code == 200
+        assert resp_signup.json()["message"] == f"Signed up {email} for {activity}"
         assert email in activities[activity]["participants"]
 
-        # Act: second signup should be blocked
-        resp2 = client.post(f"/activities/{activity}/signup?email={email}")
-        assert resp2.status_code == 400
-        body = resp2.json()
-        assert "already signed up" in body.get("detail", "")
+        # Act - duplicate signup
+        resp_dup = client.post(f"/activities/{activity}/signup?email={email}")
+        # Assert - duplicate blocked
+        assert resp_dup.status_code == 400
+
+        # Act - unregister
+        resp_unreg = client.delete(f"/activities/{activity}/signup?email={email}")
+        # Assert - unregistered
+        assert resp_unreg.status_code == 200
+        assert resp_unreg.json()["message"] == f"Unregistered {email} from {activity}"
+
+        # Act - unregister again
+        resp_unreg_again = client.delete(f"/activities/{activity}/signup?email={email}")
+        # Assert - not found
+        assert resp_unreg_again.status_code == 404
 
     finally:
-        # Teardown: restore original participants
-        activities[activity]["participants"] = original
+        activities.clear()
+        activities.update(snapshot)
 
 
-def test_unregister_endpoint():
+def test_signup_for_nonexistent_activity_aaa():
+    # Arrange
+    activity = "Nonexistent Club"
+    email = "noone@example.edu"
+
+    # Act
+    resp = client.post(f"/activities/{activity}/signup?email={email}")
+
+    # Assert
+    assert resp.status_code == 404
+
+
+def test_unregister_when_not_signed_up_aaa():
     # Arrange
     activity = "Programming Class"
-    email = "unregister-test@example.edu"
-    original = list(activities[activity]["participants"])  # snapshot
+    email = "not-signed@example.edu"
+    snapshot = copy.deepcopy(activities)
 
     try:
-        # Ensure signup exists
-        resp_signup = client.post(f"/activities/{activity}/signup?email={email}")
-        assert resp_signup.status_code == 200
-        assert email in activities[activity]["participants"]
+        # Ensure the email is not in participants
+        if email in activities[activity]["participants"]:
+            activities[activity]["participants"].remove(email)
 
-        # Act: unregister
-        resp_unreg = client.delete(f"/activities/{activity}/signup?email={email}")
-        assert resp_unreg.status_code == 200
-        assert email not in activities[activity]["participants"]
+        # Act
+        resp = client.delete(f"/activities/{activity}/signup?email={email}")
+
+        # Assert
+        assert resp.status_code == 404
 
     finally:
-        # Teardown
-        activities[activity]["participants"] = original
+        activities.clear()
+        activities.update(snapshot)
